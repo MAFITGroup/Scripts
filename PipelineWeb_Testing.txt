@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+    stages {
+        stage('Get resource') {
+            steps {
+                git branch: 'testing', url: 'https://github.com/MAFITGroup/lsu_app.git/'
+            }
+        }
+        stage('Verify environment') {
+            steps {
+                echo 'Verify enviroment'
+                bat 'flutter doctor'
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Build flutter web app'
+                bat 'flutter config --build-dir=build'
+                bat 'flutter build web' 
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo '---Run environment---'
+                bat 'npm firebase --version'
+                echo '---Firebase Login---'
+                bat 'firebase deploy --token 1//0h1xqnCKUEicRCgYIARAAGBESNwF-L9IrhWWiEOM297NS_K6GbfJ4AZwr2k_TnpHDAEmew3ohMjr5s2Smu8-pQTqHwMJzTUBvpzM'
+            }
+        }    
+    }
+    post {  
+         success {  
+             mail bcc: '', body: '''Su aplicación ha sido desplegada en el hosting de Firebase - TESTING de forma satisfactoria 
+                MAF IT Group''', cc: 'mauricio.novo@estudiantes.utec.edu.uy , agustin.rodriguez@estudiantes.utec.edu.uy', from: 'plataforma.lsu@gmail.com', 
+                replyTo: '', subject: 'Success TESTING Jenkins Job ', to: 'flavia.amaral@estudiantes.utec.edu.uy'  
+         }  
+         failure {  
+             mail bcc: '', body: "<b>Pipeline fallida</b><br>Project: ${env.JOB_NAME} <br>Build Number: ${env.BUILD_NUMBER} <br> URL de build: ${env.BUILD_URL}", 
+             cc: 'mauricio.novo@estudiantes.utec.edu.uy , agustin.rodriguez@estudiantes.utec.edu.uy', charset: 'UTF-8', from: 'plataforma.lsu@gmail.com', 
+             mimeType: 'text/html', replyTo: '', subject: "ERROR CI: Proyecto en Jenkins -> ${env.JOB_NAME}", to: "flavia.amaral@estudiantes.utec.edu.uy";  
+         }    
+     }	
+}
